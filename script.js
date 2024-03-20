@@ -63,9 +63,12 @@ const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
 // Display  User's Movements
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
-  movements.forEach(function (mov, i) {
+
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     const html = `<div class="movements">
@@ -128,13 +131,6 @@ const updateUI = function (acc) {
   console.log('login');
 };
 
-//Display User's Name
-// const displayName = function (acc) {
-//   labelname.textContent = `Welcome ${acc.owner}!`;
-// };
-
-// displayName(account2);
-
 // Event Handler
 let currentAccount;
 btnLogin.addEventListener('click', function (e) {
@@ -184,48 +180,46 @@ btnTransfer.addEventListener('click', function (e) {
   }
 });
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
 
-const currencies = new Map([
-  ['USD', 'United States dollar'],
-  ['EUR', 'Euro'],
-  ['GBP', 'Pound sterling'],
-]);
+  const amount = Number(inputLoanAmount.value);
 
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    // Add Movement
+    currentAccount.movements.push(amount);
 
-/////////////////////////////////////////////////
-
-const euroToUsd = 1.1;
-const movementsUSDx = movements.map(function (mov) {
-  return mov * euroToUsd;
-});
-
-const movementsUSD = movements.map(mov => mov * euroToUsd);
-
-console.log(movements);
-console.log(movementsUSD);
-
-const movementsUSDfor = [];
-
-for (const mov of movements) movementsUSDfor.push(mov * euroToUsd);
-
-const movementsDescriptions = movements.map((mov, i, arr) => {
-  if (mov > 0) {
-    return 0;
+    // Update UI
+    updateUI(currentAccount);
   }
 });
 
-// accumulator -> snowball
-const balance = movements.reduce((acc, cur) => acc + cur, 0);
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
 
-console.log(balance);
+  if (
+    currentAccount.username === inputCloseUsername.value &&
+    currentAccount.pin === Number(inputClosePin.value)
+  ) {
+    console.log('Account Deleted');
 
-const totalDepositsUSD = movements
-  .filter(mov => mov > 0)
-  .map(mov => mov * euroToUsd)
-  .reduce((acc, mov) => acc + mov, 0);
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+    console.log(index);
 
-console.log(totalDepositsUSD);
+    // Delete Account
+    accounts.splice(index, 1);
+
+    // Hide UI
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = '';
+});
+
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
